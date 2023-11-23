@@ -1,6 +1,6 @@
 import { INodeProperties } from 'n8n-workflow';
 
-export const commonReadDescription: INodeProperties[] = [
+const commonReadDescription: INodeProperties[] = [
 	{
 		displayName: 'Filters',
 		name: 'filters',
@@ -33,7 +33,6 @@ export const commonReadDescription: INodeProperties[] = [
 						typeOptions: {
 							multipleValues: true,
 						},
-						description: '',
 						options: [
 							{
 								name: 'operation',
@@ -209,3 +208,7 @@ export const commonReadDescription: INodeProperties[] = [
 		description: 'Sorting order',
 	},
 ];
+
+export const getCommonReadDescription = (omit: string[] = []): INodeProperties[] => {
+	return commonReadDescription.filter((property: INodeProperties) => !omit.includes(property.name));
+}

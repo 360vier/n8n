@@ -5,6 +5,7 @@ import {
 	IHookFunctions,
 	ILoadOptionsFunctions,
 	INode,
+	INodePropertyOptions,
 	JsonObject,
 	NodeApiError,
 	NodeOperationError,
@@ -376,3 +377,13 @@ export const convertMultiselectFieldsToArray = (
 		),
 	};
 };
+
+export const mkGetProperties = function (resource: string) {
+	return async function (this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+		const availableFields = await getModuleDescription(this, resource);
+		return availableFields.map((field) => ({
+			name: `${field.label} (${field.name})`,
+			value: field.name,
+		}));
+	}
+}

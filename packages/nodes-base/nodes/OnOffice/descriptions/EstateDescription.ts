@@ -1,5 +1,4 @@
 import { INodeProperties } from 'n8n-workflow';
-import { commonReadDescription } from './CommonReadDescription';
 import {
 	generateReadAdditionalFieldsDescription,
 	generateReadDataFieldsDescription,

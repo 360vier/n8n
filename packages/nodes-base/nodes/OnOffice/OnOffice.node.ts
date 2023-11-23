@@ -1,15 +1,14 @@
-import { IExecuteFunctions, ILoadOptionsFunctions } from 'n8n-core';
+import { IExecuteFunctions } from 'n8n-core';
 import {
-	ICredentialDataDecryptedObject,
 	IDataObject,
 	INodeExecutionData,
-	INodePropertyOptions,
 	INodeType,
 	INodeTypeDescription,
 } from 'n8n-workflow';
 import { addressFields, addressOperations } from './descriptions/AddressDescription';
 import { OnOfficeFieldConfiguration, OnOfficeReadAdditionalFields } from './interfaces';
 import { estateFields, estateOperations } from './descriptions/EstateDescription';
+import { userOperations, userFields } from './descriptions/UserDescription';
 import {
 	fieldConfigurationFields,
 	fieldConfigurationOperations,
@@ -17,8 +16,7 @@ import {
 import {
 	convertMultiselectFieldsToArray,
 	createFilterParameter,
-	getModuleDescription,
-	onOfficeApiAction,
+	mkGetProperties,
 	OnOfficeRequestBatch,
 } from './GenericFunctions';
 import {
@@ -68,6 +66,10 @@ export class OnOffice implements INodeType {
 						value: 'address',
 					},
 					{
+						name: 'User',
+						value: 'user',
+					},
+					{
 						name: 'Field Configuration',
 						value: 'fields',
 					},
@@ -95,6 +97,9 @@ export class OnOffice implements INodeType {
 			...estateOperations,
 			...estateFields,
 
+			...userOperations,
+			...userFields,
+
 			...fieldConfigurationOperations,
 			...fieldConfigurationFields,
 
@@ -111,19 +116,8 @@ export class OnOffice implements INodeType {
 
 	methods = {
 		loadOptions: {
-			/* -------------------------------------------------------------------------- */
-			/*                               Address                                      */
-			/* -------------------------------------------------------------------------- */
-
-			// Get all fields of address
-			async getAddressProperties(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-				const availableFields = await getModuleDescription(this, 'address');
-				const fieldNameOptions = availableFields.map((field) => ({
-					name: `${field.label} (${field.name})`,
-					value: field.name,
-				}));
-				return fieldNameOptions;
-			},
+			getAddressProperties: mkGetProperties('address'),
+      getUserProperties: mkGetProperties('user'),
 		},
 	};
 
@@ -415,6 +409,35 @@ export class OnOffice implements INodeType {
 							);
 
 							returnData.push(result);
+						}
+					}
+					break;
+				case 'user':
+					{
+						if(operation === 'read') {
+							const dataFields = [
+								...(this.getNodeParameter('data', i) as string[]),
+							];
+
+							const additionalFields = this.getNodeParameter(
+								'additionalFields',
+								i,
+							) as OnOfficeReadAdditionalFields;
+
+							const parameters = {
+								data: dataFields,
+								filter: createFilterParameter(additionalFields.filters),
+								listlimit: additionalFields.limit,
+								sortby: additionalFields.sortBy,
+							};
+
+							const result = await batch.request<Record<string, unknown>>(
+								'read',
+								resource,
+								parameters,
+							);
+
+							returnData.push(result.map((r) => convertMultiselectFieldsToArray(r)));
 						}
 					}
 					break;

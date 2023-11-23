@@ -1,6 +1,6 @@
 import { INodeProperties, INodePropertyOptions } from 'n8n-workflow';
-import { OnOfficeReadAdditionalFieldName, OnOfficeResource } from '../interfaces';
-import { commonReadDescription } from './CommonReadDescription';
+import { OnOfficeResource } from '../interfaces';
+import { getCommonReadDescription } from './CommonReadDescription';
 
 export const generateReadDataFieldsDescription = ({
 	resource,
@@ -62,7 +62,7 @@ export const generateReadDataFieldsDescription = ({
 
 export const generateReadAdditionalFieldsDescription = ({
 	resource,
-	additionalFields,
+	additionalFields = [],
 }: {
 	resource: OnOfficeResource;
 	additionalFields?: INodeProperties[];
@@ -80,7 +80,10 @@ export const generateReadAdditionalFieldsDescription = ({
 					operation: ['read'],
 				},
 			},
-			options: [...commonReadDescription, ...(additionalFields || [])],
+			options: [
+				...getCommonReadDescription(['user'].includes(resource) ? ['offset', 'order'] : []),
+				...additionalFields
+			],
 		},
 	] as INodeProperties[];
 
